@@ -43,7 +43,7 @@ end Logical;
 architecture Behavioral of Logical is
 signal out_s : std_logic_vector(31 downto 0);
 begin
-   process
+   process(op)
    begin
     case op is
      when "0010" =>  -- AND
@@ -59,6 +59,8 @@ begin
      when others =>  -- default
          out_s <= (others =>'0');        
     end case;
+    
+    Output <= out_s;
    end process;
    --flags 
    Nout <= '0';
