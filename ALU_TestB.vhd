@@ -62,6 +62,20 @@ architecture Behavioral of ALU_TestB is
    -- No clocks detected in port list. Replace <clock> below with 
    -- appropriate port name 
  
+   --Assertion counter
+   shared variable assert_count : integer :=0; 
+   
+   --counted assrt 
+   procedure counted_assert(condition : boolean; msg : string; sev : severity_level := error) is
+   begin 
+    if not condition then 
+        assert false report msg severity sev; 
+        assert_count := assert_count +1;
+    end if;
+   end procedure;
+ 
+ 
+ 
   -- constant <clock>_period : time := 10 ns;
  
 BEGIN
@@ -73,45 +87,99 @@ BEGIN
           ALUControl => Op,
           ALUResult => Out_1,
           flags => flags_out);
+          
    -- Stimulus process
    stim_proc: process
    variable xs : unsigned(3 downto 0);
    begin	
-   --add operation
+        -- Testing 
+        -- Arithmetical operations
+        
+        --ADD 
         A<="00000000000000000000000000000101";
 		B<="00000000000000000000000000000011";
 		Op<="0000";  
         
    	    wait for 110ns;
-   	    assert Out_1 = "00000000000000000000000000001000" report "ADD failed" severity error;
-   	    if (Out_1 = "00000000000000000000000000001000") then
-   	        xs := "0001"; 
-   	    end if;
+   	    counted_assert(Out_1 = "00000000000000000000000000001000" , "ADD failed");
    	    wait for 100ns;
-   	    
+   	    --SUBB
    	    A<="10000000000000000000000000000000";
 		B<="01000000000000000000000000000000";
 		Op<="0001";  
         
    	    wait for 200ns;
-   	    assert flags_out(0) = '0' report "Test SUB overflow succes" severity error;
-   	    assert flags_out(0) = '1' report "Test SUB overflow failed overflow did not occure" severity error;
+   	    counted_assert(flags_out(0) = '1',"Test SUB overflow failed overflow did not occure");
    	    wait for 100 ns;
+   	    
+   	    --Logical operations 
+   	    --AND
    	    A <= "01010101010101010101010101010101";
         B <= "11111111111111111111111111111111";
         op <= "0010";
         wait for 200ns;
-        assert Out_1 /= "01010101010101010101010101010101" REPORT "correct Result for AND Operation."SEVERITY error;
-        assert Out_1 = "01010101010101010101010101010101" REPORT "Incorrect Result for AND Operation."SEVERITY error;
-        
+        counted_assert(Out_1 = "01010101010101010101010101010101", "Incorrect Result for AND Operation.");
         wait for 100ns;
+        
+        --OR
+        op <= "0011";
+        wait for 200ns;
+        counted_assert(Out_1 = "11111111111111111111111111111111", "Incorrect Result for OR Operation.");
+        wait for 100ns;
+        
+        --MOV (B pass through)
+        op <= "0100";
+        B <= "11111111111111111101111111111111";
+        wait for 200ns;
+        counted_assert(Out_1 = "11111111111111111101111111111111", "Incorrect Result for MOV Operation.");
+        wait for 100ns;
+        
+        --MVN (NOTB)
+        op <= "0101";
+        B <= "11111111111111111101111111111111";
+        wait for 200ns;
+        counted_assert(Out_1 = "00000000000000000010000000000000", "Incorrect Result for MVN Operation.");
+        wait for 100ns;
+        
+        --XOR 
+        op <= "0101";
+        B <= "11111111111111111111111111111111";
+        wait for 200ns;
+        -- fix this out put 
+        counted_assert(Out_1 = "10101010101010101010101010101010", "Incorrect Result for XOR Operation.");
+        wait for 100ns;
+        
+        
+        
+        --Shifting operations 
+        --LSL 
         A <= "11110000000000000000000000001111";
         B <= "00000000000000000000010010000000";
         Op <= "1100";
         wait for 200ns;
-        assert Out_1 = "00000000000000000001111000000000" REPORT "Icorrect Result for lsl Operation."SEVERITY error;
+        counted_assert(Out_1 = "00000000000000000001111000000000", "Icorrect Result for lsl Operation.");
         -- lsl worked perfectly 
         wait for 150ns;
+        
+        --LSR
+        op<="1101";
+        wait for 200ns;
+        counted_assert(Out_1 = "0", "Icorrect Result for lsr Operation."); 
+        wait for 150ns;
+        
+        --ASR
+        op<="1110";
+        wait for 200ns;
+        counted_assert(Out_1 = "0", "Icorrect Result for asr Operation.");
+        wait for 150ns;
+        
+        --ROR
+        op<="1111";
+        wait for 200ns;
+        counted_assert(Out_1 = "0", "Icorrect Result for ror Operation.");
+        wait for 150ns;
+        
+        
         
 --		A<="11111111111111111111111111111111";
 --		B<="11111111111111111111111111111111";
@@ -175,9 +243,12 @@ BEGIN
       wait for 50 ns;
       
       report "Test completed";
-      if (xs >= "0000" ) then
-   	        report "Test PASS";
-   	    end if;	
+      report "Assertions occured :" & integer'image(assert_count);
+      if assert_count = 0  then
+   	        report "TEST PASS";
+   	    else
+   	        report "TEST FAIL";
+   	  end if;
       wait;
    end process;
 
