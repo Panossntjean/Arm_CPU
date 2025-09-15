@@ -41,27 +41,29 @@ generic (
 end Shifter;
 
 architecture Behavioral of Shifter is
-    signal shiftb: std_logic_vector(4 downto 0);
+    signal shiftb: unsigned(4 downto 0);
     signal temp: std_logic_vector(WIDTH-1 downto 0);
+    signal A_u: unsigned(WIDTH-1 downto 0);
+    signal A_s: signed(WIDTH-1 downto 0);
 begin
-    shiftb <= B_in(11 downto 7);
+    shiftb <= unsigned(B_in(11 downto 7));
     shifterr: process(op)
     variable sh_am: natural range 0 to 32;
-    variable A_s: signed(WIDTH-1 downto 0);
-    variable A_u: unsigned(WIDTH-1 downto 0);    
+    --variable A_s: signed(WIDTH-1 downto 0);
+        
     begin
-        sh_am:= to_integer(unsigned(shiftb));
-        A_s := signed(A_in);
-        A_u := unsigned(A_in); 
+        sh_am:= to_integer(shiftb);
+        A_s <= signed(A_in);
+        A_u <= unsigned(A_in); 
     
         if (op = "1000") or (op = "1100")  then --lsl
             Output <= std_logic_vector(shift_left(A_u,sh_am)); 
         elsif (op = "1001") or (op = "1101")  then --lsr
             Output <= std_logic_vector(shift_right(A_u,sh_am));
         elsif (op = "1010") or (op = "1110") then --asr
-            Output <= std_logic_vector(shift_left(A_s,sh_am));
+            Output <= std_logic_vector(shift_right(A_s,sh_am));
         elsif (op = "1011") or (op = "1111") then --rotate r
-            Output <= std_logic_vector(rotate_right(A_s,sh_am));
+            Output <= std_logic_vector(rotate_right(A_u,sh_am));
         else 
             Output <= (others => '0'); -- default
         end if;           
