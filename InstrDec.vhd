@@ -49,15 +49,18 @@ signal shift : std_logic_vector(1 downto 0);
 signal shiftamt : std_logic_vector(4 downto 0);
 signal l,s : std_logic;
 begin
-op <= instr(27 downto 26);
-funct <= instr(25 downto 20);
-cmd <= instr(24 downto 21);
-l <= instr(25);
-s <= instr(20);
-shift <= instr(6 downto 5);
-shiftamt <= instr(11 downto 7);
-process(instr,op,funct,shift)
+
+process(instr)
 begin
+    op <= instr(27 downto 26);
+    funct <= instr(25 downto 20);
+    cmd <= instr(24 downto 21);
+    l <= instr(25); -- does not used here we need to fix this 
+    s <= instr(20); 
+    shift <= instr(6 downto 5);
+    shiftamt <= instr(11 downto 7);
+    
+    
     RegSrc <= "00";
     ALUSrc <= '0';
     ImmSrc <= '0';
@@ -66,6 +69,7 @@ begin
     NoWrite_in <= '0';
     case op is
         when "00" =>
+            ALUSrc <= funct(5);
             case cmd is
                 when "0000" =>  --AND
                      ALUControl <= "0010";         
@@ -100,9 +104,11 @@ begin
                             end case;
                     else -- we have move OPERATION
                           ALUControl <= "0100";  --- mov
+                          ALUSrc <= '0';  
                     end if;
                 when "1111" =>  -- MVN 
-                     ALUControl <= "0101";  
+                     ALUControl <= "0101";
+                     ALUSrc <= '0';  
                 when others => --default case
                     ALUControl <= "XXXX";
             end case;
@@ -110,7 +116,7 @@ begin
             --set alu source based on immediate bit
             RegSrc(1) <= funct(4) and '1';-- ??  not needed 
             
-            ALUSrc <= funct(5);
+            
             ImmSrc <= '0';
             
             

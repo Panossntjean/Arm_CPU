@@ -66,9 +66,7 @@ component FSM
     Port (
         clk : in STD_LOGIC;          
         reset : in STD_LOGIC;
-        Rd : in std_logic_vector(3 downto 0);
-        S_L: in std_logic;
-        op : in std_logic_vector(1 downto 0);        
+        Instruction : in std_logic_vector(31 downto 0);        
         NoWrite_in : in std_logic;
         CondEx_in : in STD_LOGIC;
         IRWrite : out STD_LOGIC;
@@ -94,7 +92,7 @@ begin
 
 U1: CONDLogic port map (cond=> instr(31 downto 28),flags=> flags,CondEx_in=> CondEx_in);
 
-U2: FSM port map(clk=>clk, reset=>reset,Rd=> instr(15 downto 12),S_L=> instr(20),op=> instr(27 downto 26),NoWrite_in=> NoWrite_in,CondEx_in=> CondEx_in, IRWrite=> IRWrite,RegWrite=> RegWrite,MAWrite=> MAWrite, MemWrite=> MemWrite, FlagsWrite=> FlagsWrite, PCSrc=> PCSrc,PCWrite=> PCWrite);
+U2: FSM port map(clk=>clk, reset=>reset,Instruction=> instr,NoWrite_in=> NoWrite_in,CondEx_in=> CondEx_in, IRWrite=> IRWrite,RegWrite=> RegWrite,MAWrite=> MAWrite, MemWrite=> MemWrite, FlagsWrite=> FlagsWrite, PCSrc=> PCSrc,PCWrite=> PCWrite);
 
 U3: InstrDec port map (instr=> instr,RegSrc=> RegSrc,ALUSrc=> ALUSrc,MemtoReg=> MemtoReg,ALUControl=> ALUControl,ImmSrc=> ImmSrc,NoWrite_in=> NoWrite_in);
 

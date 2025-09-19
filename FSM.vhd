@@ -41,9 +41,7 @@ entity FSM is
     Port (
         clk : in STD_LOGIC;          
         reset : in STD_LOGIC;
-        Rd : in std_logic_vector(3 downto 0);
-        S_L: in std_logic;
-        op : in std_logic_vector(1 downto 0);        
+        Instruction : in std_logic_vector(31 downto 0);        
         NoWrite_in : in std_logic;
         CondEx_in : in STD_LOGIC;
         IRWrite : out STD_LOGIC;
@@ -58,8 +56,15 @@ end FSM;
 architecture Behavioral of FSM is
 
    
-    type state_type is (S0, S1, S2a, S2b, S3, S4a, S4b, S4c, S4d, S4e, S4f, S4g, S4h);
+    type state_type is (reset_state,S0, S1, S2a, S2b, S3, S4a, S4b, S4c, S4d, S4e, S4f, S4g, S4h);
+                        --  0   ,    1,  2,  3,   4,   5,  6,   7,   8,   9,   10,  11,  12,  13
+    attribute enum_encoding : string;
+    attribute enum_encoding of state_type : type is "00000 00001 00010 00011 00100 00101 00110 00111 01000 01001 01010 01011 01100 01101"; 
     signal current_state, next_state : state_type;
+    
+    signal Rd :  std_logic_vector(3 downto 0);
+    signal S_L:  std_logic;
+    signal op :  std_logic_vector(1 downto 0);
 
 begin
 
@@ -67,16 +72,31 @@ begin
     process(clk, reset)
     begin
         if reset = '1' then
-            current_state <= S0;  
+            current_state <= reset_state;  
         elsif rising_edge(clk) then
             current_state <= next_state;  
         end if;
     end process;
 
     
-    process(current_state,op,CondEx_in,Rd,S_L)
-    begin
+    process(current_state,Instruction,CondEx_in,clk,NoWrite_in)
+    begin    
+        Rd <= Instruction(15 downto 12);
+        S_L <= Instruction(20);
+        op <= Instruction(27 downto 26);
+        
         case current_state is
+            when reset_state =>
+               IRWrite    <= '0';
+               RegWrite   <= '0'; 
+               MAWrite    <= '0'; 
+               MemWrite   <= '0'; 
+               FlagsWrite <= '0'; 
+               PCSrc      <= "00"; 
+               PcWrite    <= '0';
+               
+               next_state <= S0;
+               
             when S0 =>
                IRWrite    <= '1';
                RegWrite   <= '0'; 
@@ -139,9 +159,9 @@ begin
                
                 if S_L = '0' then
                     if (Rd = "1111") then 
-                        next_state <= S4a;
-                    else 
                         next_state <= S4b;
+                    else 
+                        next_state <= S4a;
                     end if;
                 else
                     if (Rd = "1111") then 
@@ -162,9 +182,9 @@ begin
                
                 if (Rd = "1111") then 
                         next_state <= S4b;
-                    else 
+                else 
                         next_state <= S4a;
-                    end if;
+                end if;
 
             when S4a =>
                IRWrite    <= '0';
