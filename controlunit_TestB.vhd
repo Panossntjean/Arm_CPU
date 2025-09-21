@@ -161,6 +161,13 @@ begin
    	        
    	        --TEST B
    	        
+   	        instrS <= x"EAFFFFF9";
+            wait for clk_period;
+   	        reset <= '0';   	        
+            wait for 3*clk_period;
+            --Branch operation
+            counted_assert(PCSrcS = "11" ,"Test Branch failed ");            
+   	        reset <= '1';
    	        --TEST BL
    	        
    	        

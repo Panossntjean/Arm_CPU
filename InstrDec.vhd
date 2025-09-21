@@ -137,7 +137,7 @@ begin
              end if;
              
         when "10"=>  -- branch  /  branch link 
-              RegSrc <= funct(4)&"0";
+              RegSrc <= funct(4)&"1";
               ALUSrc <= '1';
               ImmSrc <= '1'; --sign extention
               ALUControl <= "0000";
